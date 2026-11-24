@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="avatars/team.png" width="220" alt="代码工程 SOP 专家团" />
+<img src="code-sop-team/avatars/team.png" width="220" alt="代码工程 SOP 专家团" />
 
 # 代码工程 SOP 专家团
 
@@ -12,7 +12,7 @@
 [![Version](https://img.shields.io/badge/version-2.4.0-2b7fff?style=flat-square)](https://github.com/wangqiqi/code-sop-team/releases/tag/v2.4.0)
 [![Platform](https://img.shields.io/badge/platform-ZCode%20Plugin-black?style=flat-square)](#-安装)
 [![Python](https://img.shields.io/badge/python-3.8%2B-3776ab?style=flat-square&logo=python&logoColor=white)](#-状态与运行要求)
-[![Tests](https://img.shields.io/badge/tests-43%20passing-3fb950?style=flat-square)](tests/test_sop_gate.py)
+[![Tests](https://img.shields.io/badge/tests-43%20passing-3fb950?style=flat-square)](code-sop-team/tests/test_sop_gate.py)
 [![Subagents](https://img.shields.io/badge/subagents-12-8250df?style=flat-square)](#-团队阵容)
 [![Skills](https://img.shields.io/badge/skills-9-f0883e?style=flat-square)](#-技能清单)
 
@@ -41,7 +41,7 @@
 
 <div align="center">
 
-| <img src="avatars/code-sop-team-team-lead.png" width="88"/><br>**齐活林** | <img src="avatars/sprint-planner.png" width="88"/><br>**许清楚** | <img src="avatars/code-reviewer.png" width="88"/><br>**严过关** | <img src="avatars/release-engineer.png" width="88"/><br>**毕达成** |
+| <img src="code-sop-team/avatars/code-sop-team-team-lead.png" width="88"/><br>**齐活林** | <img src="code-sop-team/avatars/sprint-planner.png" width="88"/><br>**许清楚** | <img src="code-sop-team/avatars/code-reviewer.png" width="88"/><br>**严过关** | <img src="code-sop-team/avatars/release-engineer.png" width="88"/><br>**毕达成** |
 |:---:|:---:|:---:|:---:|
 | 交付总监（主理人） | Sprint 规划师 | 代码审查官 | 发版工程师 |
 | 路由编排<br>守四道闸门 | 冻结目标<br>MECE 拆任务 | 只读双轴审查<br>Blocker/High 分级 | 自治打版<br>verify 绿灯才发 |
@@ -52,12 +52,12 @@
 
 <div align="center">
 
-| <img src="avatars/product-manager.png" width="80"/><br>**文知需** | <img src="avatars/architect.png" width="80"/><br>**梁定边** | <img src="avatars/qa-engineer.png" width="80"/><br>**查必现** | <img src="avatars/security-engineer.png" width="80"/><br>**卫无漏** | <img src="avatars/ux-designer.png" width="80"/><br>**颜可悦** |
+| <img src="code-sop-team/avatars/product-manager.png" width="80"/><br>**文知需** | <img src="code-sop-team/avatars/architect.png" width="80"/><br>**梁定边** | <img src="code-sop-team/avatars/qa-engineer.png" width="80"/><br>**查必现** | <img src="code-sop-team/avatars/security-engineer.png" width="80"/><br>**卫无漏** | <img src="code-sop-team/avatars/ux-designer.png" width="80"/><br>**颜可悦** |
 |:---:|:---:|:---:|:---:|:---:|
 | 产品经理 | 架构师 | 测试工程师 | 安全工程师 | UI/UX 设计师 |
 | 需求澄清<br>验收标准可执行化 | 边界划分<br>依赖方向 · ADR | 用例矩阵<br>缺陷复现 | 威胁建模<br>鉴权 · 密钥治理 | 信息架构<br>六态设计 |
 
-| <img src="avatars/data-engineer.png" width="80"/><br>**石不移** | <img src="avatars/tech-spiker.png" width="80"/><br>**高见远** | <img src="avatars/engineering-steward.png" width="80"/><br>**舒井然** | <img src="avatars/morale-booster.png" width="80"/><br>**古小励** |
+| <img src="code-sop-team/avatars/data-engineer.png" width="80"/><br>**石不移** | <img src="code-sop-team/avatars/tech-spiker.png" width="80"/><br>**高见远** | <img src="code-sop-team/avatars/engineering-steward.png" width="80"/><br>**舒井然** | <img src="code-sop-team/avatars/morale-booster.png" width="80"/><br>**古小励** |
 |:---:|:---:|:---:|:---:|
 | 数据工程师 | 技术调研员 | 工程事务官 | 程序员鼓励师 |
 | schema 迁移<br>索引 · 备份回滚 | 方案对比<br>根因定位 | 环境核对<br>文档备料 | 仅情绪节点<br>1~3 句打气 |
@@ -214,7 +214,7 @@ rm -f  ~/.zcode/bin/sop_gate.py ~/.zcode/tests/test_sop_gate.py
 | 任务规划 | TASK 落在 `plan.md` | 同步成 Jira / Linear issue 并回写状态 |
 | 交付归档 | 本地文件 | 发布成钉钉文档 / Notion 页面 |
 
-> 所有技能在没有连接器时均可正常使用。配置方式见 [CONNECTORS.md](CONNECTORS.md)。
+> 所有技能在没有连接器时均可正常使用。配置方式见 [CONNECTORS.md](code-sop-team/CONNECTORS.md)。
 
 ## 📝 版本与移植说明
 
