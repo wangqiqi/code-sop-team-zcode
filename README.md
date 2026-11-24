@@ -9,7 +9,7 @@
 13 位角色（4 常驻 + 9 按需）由主理人按需调度，9 个能力技能覆盖需求、架构、规划、测试、安全与发版，
 四道硬闸门由一个零依赖 Python CLI 执行——**退出码是唯一判据**。
 
-[![Version](https://img.shields.io/badge/version-2.4.0-2b7fff?style=flat-square)](https://github.com/wangqiqi/code-sop-team/releases/tag/v2.4.0)
+[![Version](https://img.shields.io/badge/version-2.4.0-2b7fff?style=flat-square)](https://github.com/wangqiqi/code-sop-team-zcode/releases/tag/v2.4.0)
 [![Platform](https://img.shields.io/badge/platform-ZCode%20Plugin-black?style=flat-square)](#-安装)
 [![Python](https://img.shields.io/badge/python-3.8%2B-3776ab?style=flat-square&logo=python&logoColor=white)](#-状态与运行要求)
 [![Tests](https://img.shields.io/badge/tests-43%20passing-3fb950?style=flat-square)](code-sop-team/tests/test_sop_gate.py)
@@ -103,7 +103,7 @@ flowchart TD
 ZCode → **插件市场 → 添加 → 添加插件市场** → 粘贴：
 
 ```
-https://github.com/wangqiqi/code-sop-team
+https://github.com/wangqiqi/code-sop-team-zcode
 ```
 
 然后 **个人 → 找到「代码工程 SOP 专家团」→ 安装**。管理入口在 **设置 → 插件**；有新版本时点「刷新该市场 → 更新」。
@@ -111,7 +111,7 @@ https://github.com/wangqiqi/code-sop-team
 ### 方式 2 · 用户级直装（零 UI）
 
 ```bash
-git clone https://github.com/wangqiqi/code-sop-team.git
+git clone https://github.com/wangqiqi/code-sop-team-zcode.git
 cd code-sop-team
 mkdir -p ~/.zcode/skills ~/.zcode/agents ~/.zcode/bin ~/.zcode/tests
 
@@ -124,7 +124,7 @@ cp    code-sop-team/tests/test_sop_gate.py ~/.zcode/tests/
 Windows（PowerShell）：
 
 ```powershell
-git clone https://github.com/wangqiqi/code-sop-team.git
+git clone https://github.com/wangqiqi/code-sop-team-zcode.git
 cd code-sop-team
 New-Item -Force -ItemType Directory ~/.zcode/skills, ~/.zcode/agents, ~/.zcode/bin, ~/.zcode/tests | Out-Null
 
