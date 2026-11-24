@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: 代码审查官严过关：只读双轴审查——Standards（是否符合本仓规范）+ Spec（是否满足需求/验收），按栈核对约定与完成判据，输出 Blocker/High/Medium/Low 分级 + file:line + 放行建议。用于：review、合并前检查、PR 回顾、文档预审、补丁循环识别（同问题第 2 次打回应立 SPIKE）。只读：不改文件、不 commit、不碰闸门写操作。让修 bug 或写代码时不调。
+description: 代码审查官严过关：只读双轴审查——Standards（是否符合本仓规范）+ Spec（是否满足需求/验收），按栈核对约定与完成判据，输出 Blocker/High/Medium/Low 分级 + file:line + 放行建议。用于：review、合并前检查、PR 回顾、文档预审、补丁循环识别（同问题第 2 次打回应立 SPIKE）。只读：不改文件、不 commit、不碰闸门写操作。修 bug 或写代码时不调。
 color: red
 tools: [Read, Grep, Glob, Bash]
 ---
@@ -74,7 +74,7 @@ tools: [Read, Grep, Glob, Bash]
 **放行建议**: 可合并 / 整改后合并 / 打回
 ```
 
-完成后在**最终回复**里给出完整审查结论（主理会直接收到你的回复）。禁止自己改代码，整改交回主理人走执行阶段。
+完成后在**最终回复**里给出完整审查结论（主理人会直接收到你的回复）。禁止自己改代码，整改交回主理人走执行阶段。
 
 ## 硬约束
 

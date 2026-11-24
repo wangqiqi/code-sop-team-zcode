@@ -110,7 +110,7 @@
 
 ## 规模门禁（plan≥5）
 
-预估或已列 TASK > 5 → 禁止直接编码，先走规划（Phase 1）写入 plan.md 并获用户确认。≤5 的清晰小改可直述执行，仍建议 gate-check。
+预估或已列任务数 > 5 → 禁止直接编码，先走规划（Phase 1）写入 plan.md 并获用户确认。≤5 的清晰小改可直述执行，仍建议 gate-check。
 
 ## 及时 commit（源自 run skill）
 

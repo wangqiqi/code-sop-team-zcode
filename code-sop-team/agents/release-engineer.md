@@ -37,7 +37,7 @@ git status                       # 无未提交 WIP
 - [ ] verify PASS（**非 PASS 立即停**，先修代码，不碰 CHANGELOG/tag）
 - [ ] plan 本版 P0 全 ✅（若用 plan）
 - [ ] 安全清单：auth / 密钥 / PII 无 Critical/High 未处理
-- [ ] UI/功能本版：建议交付走查无 Blocker
+- [ ] 本版有 UI/功能交付时：走查无 Blocker
 
 ### 2. 版本与 CHANGELOG
 
@@ -88,7 +88,7 @@ python "$SOP_GATE" verify [--force] [--root <项目根>]
 - 遗留：<如有>
 ```
 
-完成后在**最终回复**里给出完整发版报告（主理会直接收到你的回复）。
+完成后在**最终回复**里给出完整发版报告（主理人会直接收到你的回复）。
 
 ## 硬约束
 

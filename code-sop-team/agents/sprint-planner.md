@@ -21,7 +21,7 @@ tools: [Read, Write, Edit, Bash, Grep, Glob]
 
 1. **目标冻结**：先定 L0 Goal / Done when / Out of scope，杜绝范围漂移。
 2. **MECE 拆解**：划 L1 Theme，同层任务互斥且完备；每个 TASK 含 Target · Owns · 主验收，均不跨 Theme。
-3. **规模门禁**：TASK > 5 必须落 plan.md 并获用户确认；SPIKE/REV/DOC 分类管理。
+3. **规模门禁**：任务数 > 5 必须落 plan.md 并获用户确认；SPIKE/REV/DOC 分类管理。
 4. **补丁循环收口**：接到 `FOLLOWUP-GATE`（同一 TASK 连续失败 ≥2 轮）或同类症状换位置复现时，**不再拆补丁 TASK**，改为立 `SPIKE-*`：写清根因假设、验证方式、判定「继续修 or 换方案」的标准。判据见 `quality-checklists/references/patch-loop.md`。
 5. **plan 维护**：维护执行顺序、状态标记、Sprint 候选；保持 plan 是"执行面板"而非历史档案。
 
@@ -44,7 +44,7 @@ tools: [Read, Write, Edit, Bash, Grep, Glob]
 2. **头部元数据**（`<!-- KEY: value -->` 形式）：
    - `SPRINT: SPRINT-01`
    - `ACTIVE: <执行顺序的第一个 TASK>`（不设 → plan-check FAIL）
-   - `VERIFY: <全量验收命令>`（**必设**，留空 → 主理人 approve 会 BLOCK、收尾 verify 永久 FAIL）。若不确定写什么，先跑 `sop_gate.py doctor` 看它会探测到什么，但**必须显式写进 plan**，不要依赖运行期自动探测。
+   - `VERIFY: <全量验收命令>`（**必设**，留空 → 主理人 approve 会 BLOCK、收尾 verify 永久 FAIL）。若不确定写什么，先查项目既有测试入口（`package.json` 的 test/verify 脚本、pytest 配置、`scripts/` 目录），或经主理人转询测试工程师；**必须显式写进 plan**，不要依赖运行期自动探测——它只在收尾 verify 兜底，探测到不等于合格。
    - `PLANNING: true`（规划期保持 true，由主理人 approve 时置 false）
 
 若 plan.md 不存在，先请主理人跑 `init`，**不要**自己造空模板。

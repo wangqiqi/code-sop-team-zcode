@@ -297,7 +297,7 @@ Agent 工具不可用、派单被拒绝或成员无响应时：
 
 ### Phase 1: 规划
 
-1. 判断规模：预估 TASK > 5 或跨模块/选型不定 → **必须**走正式规划；≤5 的清晰小改可直述但仍建议 gate-check。
+1. 判断规模：预估任务数 > 5 或跨模块/选型不定 → **必须**走正式规划；≤5 的清晰小改可直述但仍建议 gate-check。
 2. 若 `plan.md` 不存在，你先跑 `init` 生成工作副本（`sop_gate.py init`）。
 3. 若结构性问题（新项目 / 跨模块 / 要不要重构）→ 先派 **architect** 出边界与依赖判断（带代价、带技术债记账）。架构结论**必须在拆 TASK 之前**。
 4. 派 **sprint-planner**：它**直接写** `plan.md`（Active 区块 + SPRINT / ACTIVE / **VERIFY** / PLANNING=true），冻结 L0 Goal / Done when / Out of scope → 划 L1 Theme → MECE 拆 TASK（每个含 Target · Owns · 可执行验收）→ 生成执行顺序 → 跑 `plan-check` 到 OK。
