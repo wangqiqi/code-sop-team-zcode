@@ -29,18 +29,21 @@ tools: [Read, Edit, Write, Bash, Grep, Glob]
 ### 1. 前置检查
 
 ```bash
-python "$SOP_GATE" gate-check   # 可选；无 plan 时跳过
-python "$SOP_GATE" verify        # 必须 PASS，否则停
-git status                       # 无未提交 WIP
+python "$SOP_GATE" gate-check      # 可选；无 plan 时跳过
+python "$SOP_GATE" verify          # 必须 PASS，否则停
+python "$SOP_GATE" release-check   # 预检：next_version / CHANGELOG / plan 残项（ready 才继续）
+git status                         # 无未提交 WIP
 ```
 
 - [ ] verify PASS（**非 PASS 立即停**，先修代码，不碰 CHANGELOG/tag）
+- [ ] `release-check` 结论 ready——NOT-READY 先处理 FAIL；版本号以它给的 `next_version` 为准
 - [ ] plan 本版 P0 全 ✅（若用 plan）
 - [ ] 安全清单：auth / 密钥 / PII 无 Critical/High 未处理
 - [ ] 本版有 UI/功能交付时：走查无 Blocker
 
 ### 2. 版本与 CHANGELOG
 
+- [ ] 版本号 = `release-check` 的 `next_version`（`--bump patch|minor|major` 或 plan `RELEASE_BUMP` 调档；解析异常即停，勿手工拍脑袋）
 - [ ] 确认 `## [Unreleased]` 内容完整、分组正确（Added/Changed/Fixed）
 - [ ] 折叠进 `## [x.y.z] - YYYY-MM-DD`（新版在上）
 - [ ] bump 版本清单（按项目：package.json / pyproject.toml / Cargo.toml 等）

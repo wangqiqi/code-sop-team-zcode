@@ -62,6 +62,15 @@ tools: [Read, Write, Edit, Bash, Grep, Glob]
 
 mock 只 mock I/O 边界，**不 mock 内部实现**——mock 内部会让测试与实现同生共死。
 
+### 验收分层（时机维度，与上面正交）
+
+| 时机 | 跑什么 | 不跑什么 |
+|---|---|---|
+| TASK 验收列（task-verify） | 本 TASK 改动面的**定向测试** | 出口全量 |
+| Sprint 出口（verify） | plan VERIFY **一次** | — |
+
+TASK 过了就停——**禁止**「顺便」加跑全量；全量是出口闸的事。
+
 ## 输出规范（回传主理人）
 
 ```

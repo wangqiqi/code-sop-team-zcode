@@ -68,6 +68,7 @@ python "$SOP_GATE" plan-check [--root <项目根>]
 
 - **禁止写业务代码**，禁止改实现文件；你只写 `plan.md`。
 - `VERIFY` 必须是可执行的全量验收命令（`python -m pytest -q` / `npm test` / `pnpm -r test` 等）；写成描述性文字等于没设。
+- **验收列与 VERIFY 分层**：TASK 验收列写**定向测试**（单文件 `pytest tests/test_x.py -q` / `vitest run path/x.test.ts`），全量只留给出口 `VERIFY` 跑一次——写反了每个任务都在白跑全量。
 - 验收列**禁止描述性文字**（"功能正常""UI 没问题"）→ task-verify 会 fail-closed。必须可执行命令或 `manual:`。
 - 用 `manual:` 时，验收描述必须写清**可留证的具体动作**（查什么、比什么、证据形式），否则执行期主理人无法写 `--evidence`，任务会一直卡在 rc=3。
 - 验收命令要**跨平台**：优先单一命令（`npm test` / `pytest -q` / `python -m unittest ...`）；需要引号时外层用双引号，**不要写单引号**（Windows `cmd.exe` 不认）；复杂逻辑拆成 `scripts/verify_xxx.py` 再调用。

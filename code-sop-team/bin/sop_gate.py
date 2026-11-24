@@ -23,6 +23,11 @@ sop_gate.py — 代码工程 SOP 专家团的跨平台硬约束闸门。
                                                             查看/清零补丁循环计数（同一 TASK 连续失败轮次，≥2 应转 SPIKE）
   python sop_gate.py approve   [--force] [--root PATH]     写入 PLAN_APPROVED（前置校验 VERIFY + plan-check）
   python sop_gate.py set       <KEY> <VALUE> [--root PATH]  设置元数据（PLANNING/SPRINT/ACTIVE/...）
+  python sop_gate.py release-check [--bump patch|minor|major] [--root PATH]
+                                                            发版前置预检（next_version / CHANGELOG / plan 残项）
+  python sop_gate.py friction-log --task ID --verify pass|fail|manual [--rounds N] [--rework N] [--note "..."]
+                                                            记一条任务摩擦数据（Sprint 收尾看通过率与返工）
+  python sop_gate.py friction-report [--root PATH]         汇总摩擦数据（通过率/轮次/返工 TOP/SPIKE 建议）
   python sop_gate.py install-hook [--root PATH]            安装可选 git pre-commit 硬闸门
   python sop_gate.py uninstall-hook [--root PATH]          卸载 git pre-commit 硬闸门
 
@@ -57,7 +62,7 @@ HOOK_MARK_END = "# <<< code-sop-gate <<<"
 
 META_KEYS = [
     "PLANNING", "SPRINT", "PLAN_APPROVED", "AUTONOMOUS", "SPRINT_STATUS",
-    "ACTIVE", "NEXT", "LAST_DONE", "VERIFY", "MAX_LOOPS",
+    "ACTIVE", "NEXT", "LAST_DONE", "VERIFY", "MAX_LOOPS", "RELEASE_BUMP",
 ]
 
 STATUS_ACTIVE = ("⬜", "🔧")     # 未完成
@@ -1289,6 +1294,254 @@ def cmd_followup(root: Path, reset: bool = False, task_id: Optional[str] = None)
     return 0
 
 
+# ---------------------------------------------------------------------------
+# release-check · 发版前置预检（吸收自 Super Cursor runner.sh）
+# ---------------------------------------------------------------------------
+
+def _list_git_tags(root: Path) -> List[str]:
+    try:
+        cp = subprocess.run(
+            ["git", "tag", "--list"], cwd=str(root),
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+        )
+    except Exception:
+        return []
+    if cp.returncode != 0:
+        return []
+    return [ln.strip() for ln in (cp.stdout or "").splitlines() if ln.strip()]
+
+
+def _parse_semver_tag(tag: str) -> Optional[Tuple[str, Tuple[int, int, int]]]:
+    """从 tag 提取 (前缀, (major, minor, patch))；非 semver 返回 None。
+
+    前缀 = tag 去掉尾部 semver 后的部分（如 'v' / 'release-' / ''）。
+    next tag 复用同一前缀，保持仓库既有命名惯例。
+    """
+    m = re.search(r"(\d+)\.(\d+)\.(\d+)$", tag)
+    if not m:
+        return None
+    prefix = tag[: m.start()]
+    if prefix and not re.fullmatch(r"[A-Za-z0-9_.-]+", prefix):
+        return None
+    return prefix, (int(m.group(1)), int(m.group(2)), int(m.group(3)))
+
+
+def _bump_version(v: Tuple[int, int, int], bump: str) -> Tuple[int, int, int]:
+    maj, mi, pa = v
+    if bump == "major":
+        return (maj + 1, 0, 0)
+    if bump == "minor":
+        return (maj, mi + 1, 0)
+    return (maj, mi, pa + 1)
+
+
+def cmd_release_check(root: Path, bump: Optional[str] = None) -> int:
+    """发版前置预检：算 next_version、核 CHANGELOG 与 plan 残项。
+
+    只预检不跑 VERIFY（出口闸仍由 verify 把守）；异常即 NOT-READY（fail-closed）。
+    """
+    print("=== release-check · 发版前置预检 ===")
+    problems = 0
+
+    # 1) 发版必须能打 tag → 必须 git 仓库
+    try:
+        cp = subprocess.run(
+            ["git", "rev-parse", "--git-dir"], cwd=str(root),
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
+        if cp.returncode != 0:
+            print("FAIL: 非 git 仓库 — 发版必须能打 annotated tag")
+            return 1
+    except Exception as e:
+        print(f"FAIL: git 不可用（{type(e).__name__}）— 发版前置预检跑不了")
+        return 1
+
+    # 2) 工作区 WIP：只提示不拦（CHANGELOG / bump 通常就是此刻未提交的改动）
+    try:
+        cp = subprocess.run(
+            ["git", "status", "--porcelain"], cwd=str(root),
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+        )
+        wip = [ln for ln in (cp.stdout or "").splitlines() if ln.strip()]
+    except Exception:
+        wip = []
+    if wip:
+        print(f"WARN 工作区有 {len(wip)} 处未提交改动（发版 commit 之前属正常；确认无意外残留）")
+        for ln in wip[:5]:
+            print(f"     {ln}")
+
+    # 3) 版本解析：最新 semver tag → next_version（--bump > plan RELEASE_BUMP > patch）
+    p = plan_path(root)
+    meta: Dict[str, str] = {}
+    if p.exists():
+        meta = parse_meta(read_text(p))
+    bump_eff = bump or (meta.get("RELEASE_BUMP") or "").strip() or "patch"
+    tags = _list_git_tags(root)
+    parsed_tags = []
+    for t in tags:
+        parsed = _parse_semver_tag(t)
+        if parsed:
+            parsed_tags.append(parsed)
+    parsed_tags.sort(key=lambda x: x[1])
+    if parsed_tags:
+        prefix, latest_v = parsed_tags[-1]
+        next_v = _bump_version(latest_v, bump_eff)
+        latest_str = ".".join(str(n) for n in latest_v)
+        next_str = ".".join(str(n) for n in next_v)
+        print(f"latest_tag: {prefix}{latest_str}")
+        print(f"next_version: {next_str}（bump={bump_eff}；--bump 或 plan RELEASE_BUMP 可改）")
+        print(f"next_tag: {prefix}{next_str}")
+        if f"{prefix}{next_str}" in tags:
+            print(f"FAIL: {prefix}{next_str} 已存在 — 换 bump 档位或人工确认版本")
+            problems += 1
+    else:
+        print("latest_tag: （无 semver tag）")
+        print("next_version: 0.1.0（首个版本）")
+        print("next_tag: v0.1.0（无历史惯例时用 v 前缀）")
+
+    # 4) CHANGELOG [Unreleased] 检查（没有 CHANGELOG 的项目走 git log，跳过）
+    cl = root / "CHANGELOG.md"
+    if not cl.exists():
+        print("INFO: 无 CHANGELOG.md — 跳过 Unreleased 检查（变更记录走 git log）")
+    else:
+        text = read_text(cl)
+        m = re.search(r"^##\s*\[Unreleased\]\s*$", text, re.M)
+        if not m:
+            print("WARN: CHANGELOG 无 [Unreleased] 段 — 确认版本段是否已直接写好")
+        else:
+            rest = text[m.end():]
+            m2 = re.search(r"^##\s*\[", rest, re.M)
+            body = rest[: m2.start()] if m2 else rest
+            if body.strip():
+                print("OK: CHANGELOG [Unreleased] 有内容")
+            else:
+                print("WARN: CHANGELOG [Unreleased] 为空 — 本次发版要写什么？")
+
+    # 5) plan 残项（与 verify 同口径：所有 TASK-* 必须 ✅）
+    if p.exists():
+        not_done = [
+            t["id"] for t in parse_tasks(read_text(p))
+            if t["id"].startswith("TASK-") and "✅" not in t["status"]
+        ]
+        if not_done:
+            shown = ", ".join(not_done[:8]) + ("…" if len(not_done) > 8 else "")
+            print(f"FAIL: plan 有未完成 TASK × {len(not_done)} — {shown}")
+            problems += 1
+        else:
+            print("OK: plan TASK 全部 ✅")
+    else:
+        print("INFO: 无 plan（未用 SOP 流程）— 跳过任务检查")
+
+    print()
+    if problems:
+        print("结论: NOT-READY — 先处理上述 FAIL 再打版")
+        return 1
+    print("结论: ready — 按发版清单继续（verify 仍必须 PASS，这里不替代出口闸）")
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# friction-log / friction-report · 摩擦度量（吸收自 Super Cursor runner.sh）
+# ---------------------------------------------------------------------------
+
+FRICTION_NAME = "friction.jsonl"
+
+
+def friction_path(root: Path) -> Path:
+    return sop_dir(root) / FRICTION_NAME
+
+
+def cmd_friction_log(root: Path, task: str, rounds: int, rework: int,
+                     verify: str, note: str) -> int:
+    """追加一条任务摩擦记录到 .zcode/sop/friction.jsonl（JSONL，锁内写）。"""
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", task or ""):
+        die("task 必须是任务 ID（字母数字 . _ -），如 TASK-003")
+    if rounds < 1 or rework < 0:
+        die("rounds ≥ 1 且 rework ≥ 0")
+    entry = {
+        "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "task": task,
+        "rounds": rounds,
+        "rework": rework,
+        "verify": verify,
+        "note": (note or "")[:200],
+    }
+    sop_dir(root).mkdir(parents=True, exist_ok=True)
+    with state_lock(root):
+        with open(friction_path(root), "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    print(f"OK: 已记录 {task}（rounds={rounds} rework={rework} verify={verify}）")
+    return 0
+
+
+def cmd_friction_report(root: Path) -> int:
+    """汇总 friction.jsonl：通过率 / 平均轮次 / 返工 TOP / SPIKE 建议。
+
+    与 followup 计数联动展示；坏行跳过并 WARN（fail-closed：不崩，但明示）。
+    """
+    print("=== friction-report · 摩擦汇总 ===")
+    fp = friction_path(root)
+    if not fp.exists():
+        print("无记录 — 用 friction-log 逐 TASK 留痕（--task --verify --rounds --rework）")
+        return 0
+    entries: List[dict] = []
+    bad = 0
+    for ln in read_text(fp).splitlines():
+        ln = ln.strip()
+        if not ln:
+            continue
+        try:
+            entries.append(json.loads(ln))
+        except ValueError:
+            bad += 1
+    if bad:
+        print(f"WARN 跳过 {bad} 行坏记录（非 JSON）")
+    if not entries:
+        print("无有效记录")
+        return 0
+
+    per_task: Dict[str, Dict[str, int]] = {}
+    vc: Dict[str, int] = {"pass": 0, "fail": 0, "manual": 0}
+    for e in entries:
+        t = str(e.get("task", "?"))
+        d = per_task.setdefault(t, {"logs": 0, "rounds": 0, "rework": 0, "fail": 0})
+        d["logs"] += 1
+        d["rounds"] += int(e.get("rounds", 1) or 1)
+        d["rework"] += int(e.get("rework", 0) or 0)
+        v = str(e.get("verify", "?"))
+        vc[v] = vc.get(v, 0) + 1
+        if v == "fail":
+            d["fail"] += 1
+
+    total = len(entries)
+    pass_n = vc.get("pass", 0)
+    rate = pass_n / total * 100 if total else 0.0
+    log_total = sum(d["logs"] for d in per_task.values()) or 1
+    avg_rounds = sum(d["rounds"] for d in per_task.values()) / log_total
+    total_rework = sum(d["rework"] for d in per_task.values())
+    print(f"记录 {total} 条 · 任务 {len(per_task)} 个 · verify 通过率 {rate:.0f}%"
+          f"（pass {pass_n} / fail {vc.get('fail', 0)} / manual {vc.get('manual', 0)}）")
+    print(f"平均轮次 {avg_rounds:.1f} · 总返工 {total_rework} 次")
+
+    top = sorted(per_task.items(), key=lambda kv: (-kv[1]["rework"], -kv[1]["fail"]))[:5]
+    if any(d["rework"] or d["fail"] for _, d in top):
+        print("返工 TOP:")
+        for t, d in top:
+            if not (d["rework"] or d["fail"]):
+                continue
+            print(f"  {t:<16} rework={d['rework']} fail={d['fail']} rounds={d['rounds']}/{d['logs']}次")
+
+    fu = load_followup(root)
+    hot = {k: n for k, n in fu.items() if n >= 1}
+    if hot:
+        shown = ", ".join(f"{k}×{n}" for k, n in sorted(hot.items(), key=lambda x: -x[1]))
+        print(f"followup 未清零: {shown}")
+    spike = [t for t, d in per_task.items() if d["rework"] >= 2 or d["fail"] >= 2]
+    if spike:
+        print(f"高摩擦（rework≥2 或 fail≥2）: {', '.join(sorted(spike))} — 建议立 SPIKE，判据见 patch-loop.md")
+    return 0
+
+
 def cmd_next_task(root: Path, apply: bool = False) -> int:
     p = plan_path(root)
     if not p.exists():
@@ -1372,6 +1625,8 @@ def _meta_value_error(key: str, value: str) -> Optional[str]:
     if key in ("ACTIVE", "NEXT", "LAST_DONE"):
         if v != "(none)" and not re.match(r"^(TASK|SPIKE|REV|DOC)-\d+$", v):
             return f"{key} 只能是 (none) 或 TASK/SPIKE/REV/DOC-<数字>"
+    if key == "RELEASE_BUMP" and v not in ("patch", "minor", "major"):
+        return "RELEASE_BUMP 只能是 patch/minor/major"
     return None
 
 
@@ -1544,6 +1799,21 @@ def build_parser() -> argparse.ArgumentParser:
     ps.add_argument("value")
     ps.add_argument("--root")
 
+    prc = sub.add_parser("release-check", help="发版前置预检（next_version / CHANGELOG / plan 残项）")
+    prc.add_argument("--bump", choices=["patch", "minor", "major"],
+                     help="覆盖 bump 档位（默认 patch；plan 可设 RELEASE_BUMP）")
+    prc.add_argument("--root")
+
+    pfl = sub.add_parser("friction-log", help="记一条任务摩擦数据（轮次/返工/验收结果）")
+    pfl.add_argument("--task", required=True, help="任务 ID，如 TASK-003")
+    pfl.add_argument("--verify", required=True, choices=["pass", "fail", "manual"])
+    pfl.add_argument("--rounds", type=int, default=1, help="本轮 task-verify 跑了几轮（≥1）")
+    pfl.add_argument("--rework", type=int, default=0, help="本轮引发的返工次数（≥0）")
+    pfl.add_argument("--note", default="", help="一句话备注（≤200 字符）")
+    pfl.add_argument("--root")
+
+    sub.add_parser("friction-report", help="汇总摩擦数据（通过率/轮次/返工 TOP/SPIKE 建议）").add_argument("--root")
+
     sub.add_parser("install-hook", help="安装 git pre-commit").add_argument("--root")
     sub.add_parser("uninstall-hook", help="卸载 git pre-commit").add_argument("--root")
     return p
@@ -1585,6 +1855,10 @@ def main() -> int:
         "followup": lambda: cmd_followup(root, getattr(args, "reset", False), getattr(args, "task_id", None)),
         "approve": lambda: cmd_approve(root, getattr(args, "force", False)),
         "set": lambda: cmd_set(root, args.key, args.value),
+        "release-check": lambda: cmd_release_check(root, getattr(args, "bump", None)),
+        "friction-log": lambda: cmd_friction_log(
+            root, args.task, args.rounds, args.rework, args.verify, args.note),
+        "friction-report": lambda: cmd_friction_report(root),
         "install-hook": lambda: cmd_install_hook(root),
         "uninstall-hook": lambda: cmd_uninstall_hook(root),
     }

@@ -72,7 +72,10 @@ VERIFY 回退探测会用**当前解释器名**（避免只有 python3 的机器
 | `next-task [--apply]` | 找下一个 ACTIVE（跳过 SPIKE/REV/DOC）；`--apply` 把结果写回 ACTIVE/NEXT | 0 |
 | `followup [TASK_ID] [--reset]` | 查看「同一 TASK 连续失败轮次」；`--reset` 清零（可指定任务）。**≥2 轮即补丁循环，应转 SPIKE** | 0 |
 | `approve [--force]` | 用户确认后写入 PLAN_APPROVED、置 PLANNING=false；**前置校验 VERIFY + plan-check** | 0 或 1 BLOCK |
-| `set KEY VALUE` | 设元数据（PLANNING/SPRINT/ACTIVE/NEXT/VERIFY…）；拒绝注释定界符，并按键校验值（批准日期/布尔/计数/任务 ID） | 0 或 2 |
+| `set KEY VALUE` | 设元数据（PLANNING/SPRINT/ACTIVE/NEXT/VERIFY/RELEASE_BUMP…）；拒绝注释定界符，并按键校验值（批准日期/布尔/计数/任务 ID/bump 档位） | 0 或 2 |
+| `release-check [--bump patch\|minor\|major]` | **发版前置预检**：最新 semver tag → next_version（`--bump` > plan `RELEASE_BUMP` > patch）、CHANGELOG `[Unreleased]`、plan 残项；不替代 `verify` 出口闸 | 0 ready，1 NOT-READY |
+| `friction-log --task ID --verify pass\|fail\|manual [--rounds N] [--rework N] [--note "…"]` | 逐 TASK 记摩擦数据（轮次/返工/验收结果），追加到 `.zcode/sop/friction.jsonl` | 0 |
+| `friction-report` | 汇总摩擦：verify 通过率 / 平均轮次 / 返工 TOP / followup 联动 / 高摩擦任务建议立 SPIKE | 0 |
 | `install-hook` | 可选：装 git pre-commit，提交前强制 **plan-check + gate-check**；**内嵌当前解释器绝对路径**（不依赖 PATH，适配 ZCode 会话解释器） | 0 |
 | `uninstall-hook` | 卸载 git pre-commit | 0 |
 
@@ -81,6 +84,17 @@ VERIFY 回退探测会用**当前解释器名**（避免只有 python3 的机器
 ### 验收列里的管道符
 
 Markdown 表格里 `|` 会拆列。验收命令含管道符时，写 `\|` 转义（`echo a \| grep a`），脚本会还原成 `|` 再执行；忘记转义时脚本会把多余列并回 Acceptance，不会截断成半截命令。写完后用 `task-verify` 实跑确认命令完整。
+
+### 验收分层：TASK 定向，出口全量
+
+两个时机各跑各的，不要混：
+
+| 时机 | 跑什么 | 禁止 |
+|------|--------|------|
+| 每个 TASK 收尾（`task-verify`） | 只跑**本 TASK 验收列**——定向测试（`pytest tests/test_x.py -q` / `vitest run path/to/x.test.ts`）或 `manual:` 留证 | 把出口全量命令写进验收列；TASK 过了「顺便」再跑一遍全量 |
+| Sprint 全部 ✅ 后（`verify`） | plan `VERIFY` **一次** | 每个 TASK 结束都跑大验证 |
+
+验收列写定向命令、`VERIFY` 写全量命令是**规划期就要分清**的事——写反了，轻则每个任务白跑几分钟全量，重则把「出口闸一次大验证」稀释成噪音。
 
 ### 回归测试套件
 

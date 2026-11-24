@@ -199,7 +199,7 @@ Phase 5 报告里固定带一行「环境：解释器 X · 脚本 Y · 钩子 �
 - **data-engineer**：schema、迁移、索引、备份、一致性。「加个字段怎么迁」「这个查询为什么慢」「数据对不上怎么查」
 - **tech-spiker**：技术选型、方案对比、根因定位。「A 和 B 选哪个」「调研一下」「这个能做吗」
 - **morale-booster**：情绪节点打气（只读）。用户说"我快崩了""又没过"，或你在 BLOCK / FAIL / 连测 ≥2 轮 / 收尾 / 发版成功节点主动调度。用户说"不用鼓励/安静点"时不调。
-- **engineering-steward**：环境/依赖/仓库/文档照料（只读检查 + 文档草稿）。「环境对不对」「依赖核对下」「整理下仓库」「写个 CHANGELOG 草稿」
+- **engineering-steward**：环境/依赖/仓库/文档照料（只读检查 + 文档草稿 + learn 认知沉淀）。「环境对不对」「依赖核对下」「整理下仓库」「写个 CHANGELOG 草稿」「沉淀下项目认知」
 
 ## 角色调度（ZCode 实现方式）
 
@@ -328,8 +328,8 @@ ACTIVE → 实现 → task-verify → 审查(若触发) → 审计复核 → CHA
    - **安全触发（必须）**：diff 触及登录、权限、支付、上传、对外 API、儿童或隐私数据 → 额外派 **security-engineer** 只读走查。它给 Blocker 就是 Blocker，**不得**因"只是建议"而放行。
    - **数据触发（必须）**：diff 含 schema 变更、迁移脚本、批量数据操作 → 额外派 **data-engineer** 只读核方案（含回滚路径）。
 4. **及时 commit**：每个 TASK ✅ 同轮必须 commit（**不含 plan.md**——plan 属本地执行面板，`.zcode/sop/` 已由 `init` 写入 `.gitignore`），message 含任务 ID：`type(scope): summary (TASK-003)`。无改动则如实说明 working tree clean，禁止伪造空提交。
-5. 把当前 TASK 标 ✅、更新 plan 后跑 `next-task --apply`——它会把下一个 ACTIVE 写回 plan.md。`AUTONOMOUS:true` 时同会话连跑，仅决策点打断。
-6. Sprint 全部 ✅ → 跑 `sop_gate.py verify` 全量验收（先校验所有 TASK 已 ✅，再跑 VERIFY 命令）；通过后进入收尾/发版。若确有残项且用户明确接受，才可用 `--force`，并必须在汇报中写明跳过了哪些任务。
+5. 把当前 TASK 标 ✅、更新 plan 后跑 `next-task --apply`——它会把下一个 ACTIVE 写回 plan.md。`AUTONOMOUS:true` 时同会话连跑，仅**决策点**打断——决策点只有五类：`decision_needed`（需求/取舍要用户拍板）、`blocker`（闸门 BLOCK / 工具缺失）、`high_risk`（不可逆或破坏性操作）、`goal_drift`（改动越出 Goal）、`release`（发版动作）。**TASK 切换、commit、更新 plan、写 CHANGELOG 不是决策点，勿停。**
+6. Sprint 全部 ✅ → 跑 `sop_gate.py verify` 全量验收（先校验所有 TASK 已 ✅，再跑 VERIFY 命令）；通过后进入收尾/发版。若确有残项且用户明确接受，才可用 `--force`，并必须在汇报中写明跳过了哪些任务。收尾时跑一次 `friction-report`（执行期每个 TASK 收尾顺手 `friction-log --task <ID> --verify <结果> [--rounds N] [--rework N]` 留痕）——通过率、返工 TOP、高摩擦任务一目了然；高摩擦（rework≥2 或 fail≥2）的应立 SPIKE 而不是下个 Sprint 再踩一遍。
 
 ### Phase 3: 审查（可并行于 Phase 2 的关键点）
 
@@ -347,6 +347,8 @@ UI 类 Sprint 收尾前，可派 **ux-designer** 做可用性走查（六态齐�
 ### Phase 5: 报告
 
 综合各成员产出与闸门结果，向用户汇报：**环境自检结论**（解释器 · 脚本 · 钩子 · 是否降级）· 完成了什么 · 闸门状态（原始输出）· 提交/tag · 遗留与下一步。
+
+收尾后（可选但推荐）派 **engineering-steward** 蒸馏 `.zcode/sop/learn.md`：种子三问（开发/测试命令、分层入口、发版节奏）+ 本次 Sprint 的坑与非显然决策；**同类坑重复 ≥2 次才提议晋升为约定，且须用户确认**。这份认知层让下个会话少重复解释项目结构、少重复踩同样的坑。
 
 ## 四道硬闸门（主理人亲自守卫 · 铁律）
 
