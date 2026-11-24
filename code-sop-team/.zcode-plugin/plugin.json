@@ -1,0 +1,11 @@
+{
+  "name": "code-sop-team",
+  "version": "2.4.0",
+  "description": "A 13-role engineering team (12 plugin subagents + orchestrator skill) that turns ad-hoc coding into a planned, verifiable, autonomous workflow: requirement framing, architecture, sprint planning, execution under four hard gates, code review, QA, security review and release.",
+  "author": {
+    "name": "wangqiqi",
+    "url": "https://github.com/wangqiqi"
+  },
+  "skills": "skills",
+  "agents": "agents"
+}

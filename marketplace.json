@@ -1,0 +1,18 @@
+{
+  "name": "dev-saida-d352a854",
+  "plugins": [
+    {
+      "name": "code-sop-team",
+      "source": "./code-sop-team",
+      "version": "2.4.0",
+      "description": "A 13-role engineering team (12 plugin subagents + orchestrator skill) that turns ad-hoc coding into a planned, verifiable, autonomous workflow: requirement framing, architecture, sprint planning, execution under four hard gates, code review, QA, security review and release.",
+      "displayName": "Code Engineering SOP Team",
+      "displayName_i18n": {
+        "zh-CN": "代码工程 SOP 专家团"
+      },
+      "description_i18n": {
+        "zh-CN": "13 人工程团队（12 个子智能体 + 主理人技能）：需求澄清、架构设计、任务规划、四道硬闸、测试安全走查与发版，按需请人。"
+      }
+    }
+  ]
+}
