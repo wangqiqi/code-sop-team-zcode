@@ -4,7 +4,7 @@
     {
       "name": "code-sop-team",
       "source": "./code-sop-team",
-      "version": "2.5.0",
+      "version": "2.5.1",
       "description": "A 13-role engineering team (12 plugin subagents + orchestrator skill) that turns ad-hoc coding into a planned, verifiable, autonomous workflow: requirement framing, architecture, sprint planning, execution under four hard gates, code review, QA, security review and release.",
       "displayName": "Code Engineering SOP Team",
       "displayName_i18n": {
