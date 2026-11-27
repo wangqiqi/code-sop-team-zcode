@@ -698,6 +698,13 @@ def cmd_doctor(root: Path) -> int:
     if not p.exists():
         print("WARN plan 未初始化 — 首次使用请跑 init")
         warns.append("plan 未初始化")
+    elif p.is_symlink():
+        # 实战教训（sais 项目）：plan.md 被 symlink 到外部真源时，atomic_write
+        # 的 os.replace 会把链接本身替换成普通文件——副本与真源从此脱钩，
+        # 闸门写的永远是脱钩后的死副本。发现即 FAIL，让用户改用「真源为本文件」。
+        print("FAIL plan.md 是符号链接 — 写状态会把链接替换成普通文件，与真源脱钩")
+        print("     修法: 删掉链接，把真源内容直接放进 .zcode/sop/plan.md（外部叙述稿另行维护）")
+        problems.append("plan 是符号链接")
     else:
         try:
             text = read_text(p)

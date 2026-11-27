@@ -1,7 +1,7 @@
 ---
 name: sop-gate
 version: 1.3.0
-description: Executes the four hard gates through a zero-dependency Python CLI: init, gate-check, task-verify, verify, next-task, followup, doctor and an optional git pre-commit hook.
+description: Executes the four hard gates through a zero-dependency Python CLI: init, gate-check, task-verify, verify, next-task, followup, approve, release-check, friction-log/report, doctor and an optional git pre-commit hook.
 name_en: SOP Gate — Hard Gates
 name_zh: 硬约束闸门
 description_en: Executes the four hard gates through a zero-dependency Python CLI: init, gate-check, task-verify, verify, next-task, followup, doctor and an optional git pre-commit hook.
